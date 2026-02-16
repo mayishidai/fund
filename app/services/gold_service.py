@@ -90,122 +90,169 @@ def get_gold_price():
 # 获取上海金历史数据
 def get_gold_history():
     try:
+        print("获取实时黄金历史数据...")
         history_data = []
-        today = datetime.datetime.now()
         
-        # 获取当前实时价格作为基础价格
-        current_price = get_gold_price()["price"]
-        base_price = current_price
+        # 尝试从东方财富网获取黄金9999的历史数据
+        url = "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=118.AU9999&fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13&fields2=f51,f52,f53,f54,f55,f56,f57,f58&klt=101&fqt=0&end=20500101&lmt=31"
         
-        # 生成30天的历史数据
-        for i in range(30, 0, -1):
-            date = today - datetime.timedelta(days=i)
-            date_str = date.strftime("%Y-%m-%d")
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+            "Referer": "https://quote.eastmoney.com/q/118.AU9999.html"
+        }
+        
+        response = requests.get(url, headers=headers, timeout=10)
+        data = response.json()
+        
+        if data and data.get("data") and data["data"].get("klines"):
+            klines = data["data"]["klines"]
             
-            # 生成基于当前价格的随机历史数据，考虑价格趋势
-            # 每天价格波动范围在-2%到+2%之间
-            day_factor = 1 + (random.random() - 0.5) * 0.04
-            historical_value = base_price * day_factor
+            for kline in klines:
+                parts = kline.split(",")
+                if len(parts) >= 5:
+                    # 解析日期和价格数据
+                    date_str = parts[0]
+                    open_price = float(parts[1])
+                    high_price = float(parts[2])
+                    low_price = float(parts[3])
+                    close_price = float(parts[4])
+                    
+                    history_data.append({
+                        "date": date_str,
+                        "open": round(open_price, 2),
+                        "close": round(close_price, 2),
+                        "high": round(high_price, 2),
+                        "low": round(low_price, 2),
+                        "price": round(close_price, 2)
+                    })
             
-            # 生成开盘价、收盘价、最高价、最低价
-            open_price = historical_value * (1 + (random.random() - 0.5) * 0.01)
-            close_price = historical_value
-            high_price = max(open_price, close_price) * (1 + random.random() * 0.01)
-            low_price = min(open_price, close_price) * (1 - random.random() * 0.01)
+            if history_data:
+                print(f"成功获取{len(history_data)}天的黄金历史数据")
+                return history_data
+        
+        # 如果东方财富网数据获取失败，尝试从Investing.com获取黄金历史数据
+        url = "https://api.investing.com/api/financialdata/8830/historical/chart/?period=86400&start=1640995200&end=1643673600"
+        
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+            "X-Requested-With": "XMLHttpRequest"
+        }
+        
+        response = requests.get(url, headers=headers, timeout=10)
+        data = response.json()
+        
+        if data and data.get("data"):
+            for item in data["data"]:
+                if len(item) >= 6:
+                    timestamp = item[0]
+                    open_price = item[1]
+                    high_price = item[2]
+                    low_price = item[3]
+                    close_price = item[4]
+                    
+                    # 转换时间戳为日期字符串
+                    date_obj = datetime.datetime.fromtimestamp(timestamp)
+                    date_str = date_obj.strftime("%Y-%m-%d")
+                    
+                    history_data.append({
+                        "date": date_str,
+                        "open": round(open_price, 2),
+                        "close": round(close_price, 2),
+                        "high": round(high_price, 2),
+                        "low": round(low_price, 2),
+                        "price": round(close_price, 2)
+                    })
             
-            history_data.append({
-                "date": date_str,
-                "open": round(open_price, 2),
-                "close": round(close_price, 2),
-                "high": round(high_price, 2),
-                "low": round(low_price, 2),
-                "price": round(historical_value, 2)
-            })
+            if history_data:
+                print(f"成功获取{len(history_data)}天的黄金历史数据")
+                return history_data
         
-        # 添加今天的数据
-        today_str = today.strftime("%Y-%m-%d")
-        history_data.append({
-            "date": today_str,
-            "open": round(current_price * (1 + (random.random() - 0.5) * 0.01), 2),
-            "close": current_price,
-            "high": round(current_price * (1 + random.random() * 0.01), 2),
-            "low": round(current_price * (1 - random.random() * 0.01), 2),
-            "price": current_price
-        })
+        # 如果所有数据源都失败，返回空数据表示获取失败
+        print("无法获取实时黄金历史数据")
+        return []
         
-        return history_data
     except Exception as e:
         print(f"获取上海金历史数据失败: {e}")
+        # 返回空数据表示获取失败
         return []
 
 # 获取上海金分时数据
 def get_gold_minute_data():
-    print("生成实时黄金分时数据...")
+    print("获取实时黄金分时数据...")
     
-    # 直接使用默认价格，确保函数稳定运行
-    current_price = 1125.0
-    print(f"使用默认价格: {current_price}元/克")
-    
-    minute_data = []
-    now = datetime.datetime.now()
-    
-    # 生成今天的分时数据，从9:00开始
-    start_time = now.replace(hour=9, minute=0, second=0, microsecond=0)
-    current_time = start_time
-    
-    # 初始化价格趋势参数
-    base_price = current_price
-    trend_direction = 1 if random.random() > 0.5 else -1
-    trend_strength = 0.001
-    volatility = 0.002
-    
-    # 模拟不同时间段的市场行为
-    market_behavior = {
-        "morning_open": {"volatility": 0.003, "trend_strength": 0.0015, "time_range": (9, 10)},
-        "morning_calm": {"volatility": 0.001, "trend_strength": 0.0005, "time_range": (10, 11)},
-        "noon_volatile": {"volatility": 0.0025, "trend_strength": 0.001, "time_range": (11, 12)},
-        "afternoon_open": {"volatility": 0.003, "trend_strength": 0.0015, "time_range": (13, 14)},
-        "afternoon_calm": {"volatility": 0.001, "trend_strength": 0.0005, "time_range": (14, 15)},
-        "late_trading": {"volatility": 0.004, "trend_strength": 0.002, "time_range": (15, 15.5)}
-    }
-    
-    # 模拟分时数据，每1分钟一个数据点
-    while current_time <= now:
-        current_hour = current_time.hour + current_time.minute / 60
+    try:
+        # 尝试从东方财富网获取黄金9999的实时分时数据
+        url = "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=118.AU9999&fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13&fields2=f51,f52,f53,f54,f55,f56,f57,f58&klt=1&fqt=0&end=20500101&lmt=1000"
         
-        # 根据当前时间调整市场行为参数
-        current_volatility = volatility
-        current_trend_strength = trend_strength
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+            "Referer": "https://quote.eastmoney.com/q/118.AU9999.html"
+        }
         
-        for period, behavior in market_behavior.items():
-            start, end = behavior["time_range"]
-            if start <= current_hour < end:
-                current_volatility = behavior["volatility"]
-                current_trend_strength = behavior["trend_strength"]
-                break
+        response = requests.get(url, headers=headers, timeout=10)
+        data = response.json()
         
-        # 生成价格波动，考虑趋势和随机因素
-        trend_factor = 1 + (trend_direction * current_trend_strength)
-        random_factor = 1 + (random.random() - 0.5) * current_volatility
-        price = base_price * trend_factor * random_factor
+        if data and data.get("data") and data["data"].get("klines"):
+            klines = data["data"]["klines"]
+            minute_data = []
+            
+            for kline in klines:
+                parts = kline.split(",")
+                if len(parts) >= 3:
+                    # 解析时间和价格
+                    time_str = parts[0]
+                    close_price = float(parts[2])
+                    
+                    # 格式化时间为HH:MM
+                    time_obj = datetime.datetime.strptime(time_str, "%Y-%m-%d %H:%M")
+                    time_formatted = time_obj.strftime("%H:%M")
+                    
+                    minute_data.append({
+                        "time": time_formatted,
+                        "price": round(close_price, 2)
+                    })
+            
+            if minute_data:
+                print(f"成功获取{len(minute_data)}个分时数据点")
+                return minute_data
         
-        # 随机改变趋势方向
-        if random.random() < 0.05:  # 5%概率改变趋势
-            trend_direction *= -1
+        # 如果东方财富网数据获取失败，尝试其他数据源
+        # 尝试从Investing.com获取黄金分时数据
+        url = "https://api.investing.com/api/financialdata/8830/historical/chart/?period=60&start=1640995200&end=1641081600"
         
-        # 随机调整趋势强度
-        trend_strength = max(0.0005, min(0.002, trend_strength + (random.random() - 0.5) * 0.0005))
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+            "X-Requested-With": "XMLHttpRequest"
+        }
         
-        # 更新基础价格
-        base_price = price
+        response = requests.get(url, headers=headers, timeout=10)
+        data = response.json()
         
-        minute_data.append({
-            "time": current_time.strftime("%H:%M"),
-            "price": round(price, 2)
-        })
+        if data and data.get("data"):
+            minute_data = []
+            for item in data["data"]:
+                if len(item) >= 2:
+                    timestamp = item[0]
+                    price = item[1]
+                    
+                    # 转换时间戳为HH:MM
+                    time_obj = datetime.datetime.fromtimestamp(timestamp)
+                    time_formatted = time_obj.strftime("%H:%M")
+                    
+                    minute_data.append({
+                        "time": time_formatted,
+                        "price": round(price, 2)
+                    })
+            
+            if minute_data:
+                print(f"成功获取{len(minute_data)}个分时数据点")
+                return minute_data
         
-        # 增加1分钟
-        current_time += datetime.timedelta(minutes=1)
-    
-    print(f"生成了{len(minute_data)}个分时数据点")
-    return minute_data
+        # 如果所有数据源都失败，返回空数据表示获取失败
+        print("无法获取实时黄金分时数据")
+        return []
+        
+    except Exception as e:
+        print(f"获取黄金分时数据失败: {e}")
+        # 返回空数据表示获取失败
+        return []

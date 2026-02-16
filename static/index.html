@@ -1784,6 +1784,8 @@
             // 存储当前基金数据，用于排序
             currentAllFunds = funds;
             
+            console.log('渲染全部基金列表，基金数量:', funds.length);
+            
             const tableBody = document.getElementById('all-funds-table-body');
             
             tableBody.innerHTML = funds.map(fund => {
@@ -2070,13 +2072,13 @@
                 const data = await response.json();
                 const history = data.history;
                 
-                // 准备K线图数据 [开盘价, 收盘价, 最低价, 最高价]
+                // 准备K线图数据 [开盘价, 最高价, 最低价, 收盘价] - ECharts candlestick 组件的正确顺序
                 const dates = history.map(item => item.date);
                 const klineData = history.map(item => [
                     item.open,
-                    item.close,
+                    item.high,
                     item.low,
-                    item.high
+                    item.close
                 ]);
                 
                 // 绘制K线图
