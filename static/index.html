@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>基金实时净值预估</title>
+        <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+        <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        .auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .auth-container h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .auth-form input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .auth-form button {
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .auth-form button:hover {
+            background-color: #2980b9;
+        }
+        
+        .auth-form .toggle {
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .auth-form .toggle a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .auth-form .toggle a:hover {
+            text-decoration: underline;
+        }
+        
+        .auth-message {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .auth-message.error {
+            background-color: #fee;
+            color: #e74c3c;
+        }
+        
+        .auth-message.success {
+            background-color: #efe;
+            color: #27ae60;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .header {
+                margin-bottom: 20px;
+            }
+            
+            .search-box {
+                flex-direction: column;
+            }
+            
+            .search-box input {
+                padding: 8px;
+                font-size: 14px;
+            }
+            
+            .search-box button {
+                padding: 8px;
+                font-size: 14px;
+            }
+            
+            .add-fund h2 {
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+            
+            .add-fund input {
+                padding: 8px;
+                font-size: 14px;
+            }
+            
+            .add-fund button {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .search-box button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .search-box button:hover {
+            background-color: #2980b9;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-info button {
+            padding: 5px 10px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .user-info button:hover {
+            background-color: #c0392b;
+        }
+        
+        .add-fund {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .add-fund h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .add-fund form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .add-fund input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .add-fund button {
+            padding: 10px 20px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .add-fund button:hover {
+            background-color: #219a52;
+        }
+        
+        .funds-list {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .funds-list table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .funds-list th,
+        .funds-list td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .funds-list th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #2c3e50;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .funds-list th:hover {
+            background-color: #e9ecef;
+        }
+        
+        .sort-indicator {
+            margin-left: 5px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .sort-indicator.asc::after {
+            content: '↑';
+        }
+        
+        .sort-indicator.desc::after {
+            content: '↓';
+        }
+        
+        .funds-list tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .funds-list .action {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .funds-list .delete-btn {
+            padding: 5px 10px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .funds-list .delete-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .funds-list .positive {
+            color: #e74c3c;
+        }
+        
+        .funds-list .negative {
+            color: #27ae60;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+        }
+        
+        .success {
+            color: #27ae60;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                min-width: auto;
+                flex-direction: column;
+            }
+            
+            .search-box button {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            
+            .add-fund form {
+                flex-direction: column;
+            }
+            
+            .add-fund input {
+                min-width: auto;
+            }
+            
+            .funds-list {
+                overflow-x: auto;
+            }
+            
+            .funds-list table {
+                font-size: 12px;
+                min-width: 600px;
+            }
+            
+            .funds-list th,
+            .funds-list td {
+                padding: 8px;
+            }
+            
+            .funds-list .action {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .funds-list .action button {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            
+            /* 调整模态框大小以适应移动设备 */
+            .modal-content {
+                width: 90% !important;
+                max-width: 400px;
+            }
+        }
+        </style>
+</head>
+<body>
+    <!-- 登录和注册页面 -->
+    <div id="auth-page" class="auth-container">
+        <h2 id="auth-title">登录</h2>
+        <form id="login-form" class="auth-form" onsubmit="login(event)">
+            <input type="text" id="login-username" placeholder="用户名" required>
+            <input type="password" id="login-password" placeholder="密码" required>
+            <button type="submit">登录</button>
+            <div class="toggle">
+                还没有账号？<a href="#" onclick="toggleAuthForm()">注册</a>
+            </div>
+        </form>
+        <form id="register-form" class="auth-form" style="display: none;" onsubmit="register(event)">
+            <input type="text" id="register-username" placeholder="用户名" required>
+            <input type="password" id="register-password" placeholder="密码" required>
+            <button type="submit">注册</button>
+            <div class="toggle">
+                已有账号？<a href="#" onclick="toggleAuthForm()">登录</a>
+            </div>
+        </form>
+        <div id="auth-message" class="auth-message"></div>
+    </div>
+    
+    <!-- 基金管理页面 -->
+    <div id="funds-page" class="container" style="display: none;">
+        <h1>基金实时净值预估</h1>
+        
+        <div class="header">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="搜索基金代码或名称">
+                <button onclick="searchFunds()">搜索</button>
+                <button onclick="fetchFunds()" style="background-color: #f39c12;">刷新数据</button>
+                <button onclick="exportFunds()" style="background-color: #9b59b6;">导出基金</button>
+                <button onclick="document.getElementById('file-input').click()" style="background-color: #1abc9c;">导入基金</button>
+                <button onclick="showAllFundsPage()" style="background-color: #34495e;">全部基金</button>
+                <button onclick="showGoldPage()" style="background-color: #e67e22;">上海金</button>
+                <input type="file" id="file-input" accept=".csv" style="display: none;" onchange="importFunds(event)">
+            </div>
+            <div class="user-info">
+                <span id="username"></span>
+                <button onclick="openSettings()" style="background-color: #3498db;">设置</button>
+                <button onclick="logout()">退出登录</button>
+            </div>
+        </div>
+        
+        <div class="add-fund">
+            <h2>添加基金</h2>
+            <form onsubmit="addFund(event)">
+                <input type="text" id="fund-code" placeholder="基金代码" required>
+                <input type="text" id="fund-name" placeholder="基金名称" required readonly style="background-color: #f5f5f5;">
+                <input type="number" id="fund-amount" placeholder="投资金额" step="0.01" min="0" required>
+                <button type="submit">添加</button>
+            </form>
+            <div id="add-message"></div>
+        </div>
+        
+        <div class="funds-list">
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortFunds('code')">基金代码 <span id="sort-code" class="sort-indicator"></span></th>
+                        <th onclick="sortFunds('name')">基金名称 <span id="sort-name" class="sort-indicator"></span></th>
+                        <th onclick="sortFunds('amount')">投资金额 <span id="sort-amount" class="sort-indicator"></span></th>
+                        <th onclick="sortFunds('shares')">持有份额 <span id="sort-shares" class="sort-indicator"></span></th>
+                        <th onclick="sortFunds('current_value')">当前市值 <span id="sort-current_value" class="sort-indicator"></span></th>
+                        <th onclick="sortFunds('estimate')">实时净值预估 <span id="sort-estimate" class="sort-indicator"></span></th>
+                        <th onclick="sortFunds('estimate_change')">预估涨跌幅 <span id="sort-estimate_change" class="sort-indicator"></span></th>
+                        <th onclick="sortFunds('daily_profit')">每日收益预估 <span id="sort-daily_profit" class="sort-indicator"></span></th>
+                        <th onclick="sortFunds('time')">更新时间 <span id="sort-time" class="sort-indicator"></span></th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="funds-table-body">
+                    <tr>
+                        <td colspan="8" class="loading">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 上海金页面 -->
+    <div id="gold-page" class="container" style="display: none;">
+        <h1>上海金实时交易信息</h1>
+        
+        <div class="header">
+            <div class="search-box">
+                <button onclick="showFundsPage()" style="background-color: #3498db;">返回基金页面</button>
+                <button onclick="fetchGoldData()" style="background-color: #f39c12;">刷新数据</button>
+            </div>
+            <div class="user-info">
+                <span id="gold-username"></span>
+                <button onclick="logout()">退出登录</button>
+            </div>
+        </div>
+        
+        <div class="gold-info" style="background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px;">
+            <h2>实时交易信息</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">
+                <div style="text-align: center; padding: 15px; background-color: #f8f9fa; border-radius: 4px;">
+                    <h3 style="color: #2c3e50; margin-bottom: 10px;">上海金</h3>
+                    <p style="font-size: 14px; color: #7f8c8d;">代码: <span id="gold-code">AU9999</span></p>
+                </div>
+                <div style="text-align: center; padding: 15px; background-color: #f8f9fa; border-radius: 4px;">
+                    <h3 style="color: #2c3e50; margin-bottom: 10px;">当前价格</h3>
+                    <p style="font-size: 24px; font-weight: bold; color: #3498db;"><span id="gold-price">0.00</span> 元/克</p>
+                </div>
+                <div style="text-align: center; padding: 15px; background-color: #f8f9fa; border-radius: 4px;">
+                    <h3 style="color: #2c3e50; margin-bottom: 10px;">涨跌幅</h3>
+                    <p style="font-size: 24px; font-weight: bold;"><span id="gold-change" class="positive">0.00</span>%</p>
+                </div>
+                <div style="text-align: center; padding: 15px; background-color: #f8f9fa; border-radius: 4px;">
+                    <h3 style="color: #2c3e50; margin-bottom: 10px;">更新时间</h3>
+                    <p style="font-size: 14px; color: #7f8c8d;"><span id="gold-time"></span></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="gold-chart" style="background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h2>价格走势</h2>
+            <div style="margin-bottom: 10px;">
+                <button onclick="loadGoldMinuteChart()" style="background-color: #3498db; padding: 5px 15px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 10px;">分时图</button>
+                <button onclick="loadGoldHistoryChart()" style="background-color: #95a5a6; padding: 5px 15px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">历史K线</button>
+            </div>
+            <div id="gold-chart-container" style="width: 100%; height: 500px; margin-top: 20px;"></div>
+        </div>
+    </div>
+    
+    <!-- 全部基金页面 -->
+    <div id="all-funds-page" class="container" style="display: none;">
+        <h1>全部基金信息</h1>
+        
+        <div class="header">
+            <div class="search-box">
+                <input type="text" id="all-funds-search-input" placeholder="搜索基金代码或名称">
+                <button onclick="searchAllFunds()">搜索</button>
+                <button onclick="fetchAllFunds()" style="background-color: #f39c12;">刷新数据</button>
+                <button onclick="showFundsPage()" style="background-color: #3498db;">返回基金页面</button>
+                <button onclick="showGoldPage()" style="background-color: #e67e22;">上海金</button>
+            </div>
+            <div class="user-info">
+                <span id="all-funds-username"></span>
+                <button onclick="openSettings()" style="background-color: #3498db;">设置</button>
+                <button onclick="logout()">退出登录</button>
+            </div>
+        </div>
+        
+        <div class="funds-list">
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortAllFunds('code')">基金代码 <span id="all-funds-sort-code" class="sort-indicator"></span></th>
+                        <th onclick="sortAllFunds('name')">基金名称 <span id="all-funds-sort-name" class="sort-indicator"></span></th>
+                        <th onclick="sortAllFunds('type')">基金类型 <span id="all-funds-sort-type" class="sort-indicator"></span></th>
+                        <th onclick="sortAllFunds('sector')">所属板块 <span id="all-funds-sort-sector" class="sort-indicator"></span></th>
+                        <th onclick="sortAllFunds('estimate')">实时净值预估 <span id="all-funds-sort-estimate" class="sort-indicator"></span></th>
+                        <th onclick="sortAllFunds('estimate_change')">预估涨跌幅 <span id="all-funds-sort-estimate_change" class="sort-indicator"></span></th>
+                        <th onclick="sortAllFunds('time')">更新时间 <span id="all-funds-sort-time" class="sort-indicator"></span></th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="all-funds-table-body">
+                    <tr>
+                        <td colspan="8" class="loading">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        // API基础URL
+        const API_BASE_URL = '/api';
+        
+        // 存储认证令牌和定时器
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = localStorage.getItem('username');
+        let refreshTimer = null;
+        
+        // 排序相关变量
+        let currentFunds = [];
+        let currentSortField = null;
+        let currentSortOrder = 'asc';
+        
+        // 页面加载时检查认证状态
+        document.addEventListener('DOMContentLoaded', () => {
+            if (authToken && currentUser) {
+                showFundsPage();
+                fetchFunds();
+                // 应用颜色方案
+                applyColorScheme();
+                // 每30秒自动刷新一次数据
+                if (refreshTimer) {
+                    clearInterval(refreshTimer);
+                }
+                refreshTimer = setInterval(fetchFunds, 30000);
+                console.log('设置自动刷新定时器:', refreshTimer);
+            } else {
+                showAuthPage();
+            }
+            
+            // 为基金代码输入框添加输入事件监听器
+            const fundCodeInput = document.getElementById('fund-code');
+            if (fundCodeInput) {
+                fundCodeInput.addEventListener('blur', async function() {
+                    const code = this.value.trim();
+                    if (code.length > 0) {
+                        await getFundNameByCode(code);
+                    }
+                });
+            }
+        });
+        
+        // 显示认证页面
+        function showAuthPage() {
+            document.getElementById('auth-page').style.display = 'block';
+            document.getElementById('funds-page').style.display = 'none';
+            document.getElementById('all-funds-page').style.display = 'none';
+            document.getElementById('gold-page').style.display = 'none';
+        }
+        
+        // 显示基金管理页面
+        function showFundsPage() {
+            document.getElementById('auth-page').style.display = 'none';
+            document.getElementById('funds-page').style.display = 'block';
+            document.getElementById('all-funds-page').style.display = 'none';
+            document.getElementById('gold-page').style.display = 'none';
+            document.getElementById('username').textContent = currentUser;
+        }
+        
+        // 显示上海金页面
+        function showGoldPage() {
+            document.getElementById('auth-page').style.display = 'none';
+            document.getElementById('funds-page').style.display = 'none';
+            document.getElementById('all-funds-page').style.display = 'none';
+            document.getElementById('gold-page').style.display = 'block';
+            document.getElementById('gold-username').textContent = currentUser;
+            // 加载上海金数据
+            fetchGoldData();
+        }
+        
+        // 显示全部基金页面
+        function showAllFundsPage() {
+            document.getElementById('auth-page').style.display = 'none';
+            document.getElementById('funds-page').style.display = 'none';
+            document.getElementById('all-funds-page').style.display = 'block';
+            document.getElementById('gold-page').style.display = 'none';
+            document.getElementById('all-funds-username').textContent = currentUser;
+            // 加载全部基金数据
+            fetchAllFunds();
+        }
+        
+        // 切换登录和注册表单
+        function toggleAuthForm() {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const authTitle = document.getElementById('auth-title');
+            
+            if (loginForm.style.display !== 'none') {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+                authTitle.textContent = '注册';
+            } else {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                authTitle.textContent = '登录';
+            }
+            document.getElementById('auth-message').textContent = '';
+        }
+        
+        // 登录
+        async function login(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const messageDiv = document.getElementById('auth-message');
+            
+            if (!username || !password) {
+                messageDiv.textContent = '请填写用户名和密码';
+                messageDiv.className = 'auth-message error';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/token`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+                });
+                
+                if (!response.ok) {
+                    throw new Error('用户名或密码错误');
+                }
+                
+                const data = await response.json();
+                authToken = data.access_token;
+                currentUser = username;
+                
+                // 存储认证信息
+                localStorage.setItem('authToken', authToken);
+                localStorage.setItem('username', currentUser);
+                
+                messageDiv.textContent = '登录成功';
+                messageDiv.className = 'auth-message success';
+                
+                // 跳转到基金管理页面
+                setTimeout(() => {
+                    showFundsPage();
+                    fetchFunds();
+                    // 每30秒自动刷新一次数据
+                    if (refreshTimer) {
+                        clearInterval(refreshTimer);
+                    }
+                    refreshTimer = setInterval(fetchFunds, 30000);
+                    console.log('设置自动刷新定时器:', refreshTimer);
+                }, 1000);
+            } catch (error) {
+                messageDiv.textContent = error.message;
+                messageDiv.className = 'auth-message error';
+            }
+        }
+        
+        // 注册
+        async function register(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value.trim();
+            const messageDiv = document.getElementById('auth-message');
+            
+            if (!username || !password) {
+                messageDiv.textContent = '请填写用户名和密码';
+                messageDiv.className = 'auth-message error';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || '注册失败');
+                }
+                
+                const data = await response.json();
+                messageDiv.textContent = data.message;
+                messageDiv.className = 'auth-message success';
+                
+                // 切换到登录表单
+                setTimeout(() => {
+                    toggleAuthForm();
+                }, 1000);
+            } catch (error) {
+                messageDiv.textContent = error.message;
+                messageDiv.className = 'auth-message error';
+            }
+        }
+        
+        // 退出登录
+        function logout() {
+            // 清除认证信息
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('username');
+            authToken = null;
+            currentUser = null;
+            
+            // 清除自动刷新定时器
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+                refreshTimer = null;
+                console.log('清除自动刷新定时器');
+            }
+            
+            // 跳转到登录页面
+            showAuthPage();
+        }
+        
+        // 根据基金代码获取基金名称
+        async function getFundNameByCode(code) {
+            const messageDiv = document.getElementById('add-message');
+            const fundNameInput = document.getElementById('fund-name');
+            
+            try {
+                messageDiv.textContent = '正在获取基金信息...';
+                messageDiv.className = '';
+                
+                const response = await fetch(`${API_BASE_URL}/funds/info/${code}`);
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || '获取基金信息失败');
+                }
+                
+                const fundInfo = await response.json();
+                fundNameInput.value = fundInfo.name;
+                messageDiv.textContent = '基金信息获取成功';
+                messageDiv.className = 'success';
+                
+                // 3秒后清除消息
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                }, 3000);
+            } catch (error) {
+                fundNameInput.value = '';
+                messageDiv.textContent = error.message;
+                messageDiv.className = 'error';
+            }
+        }
+        
+        // 获取基金列表
+        async function fetchFunds() {
+            console.log('开始获取基金数据:', new Date().toLocaleString());
+            
+            // 显示加载状态
+            const tableBody = document.getElementById('funds-table-body');
+            const originalContent = tableBody.innerHTML;
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="loading">正在刷新数据...</td>
+                </tr>
+            `;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/funds`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // 认证失败，跳转到登录页面
+                        logout();
+                        throw new Error('登录已过期，请重新登录');
+                    }
+                    throw new Error('获取基金列表失败');
+                }
+                
+                const funds = await response.json();
+                console.log('成功获取基金数据:', funds.length, '条记录');
+                updateFundsUI(funds);
+            } catch (error) {
+                console.error('获取基金列表失败:', error);
+                document.getElementById('funds-table-body').innerHTML = `
+                    <tr>
+                        <td colspan="9" class="loading">获取数据失败，请刷新页面重试</td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // 更新基金列表UI
+        function updateFundsUI(funds) {
+            console.log('开始更新基金UI:', funds.length, '条记录');
+            const tableBody = document.getElementById('funds-table-body');
+            
+            if (funds.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="loading">暂无基金数据，请添加基金</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // 始终重新渲染整个列表，确保页面与最新数据完全同步
+            renderFunds(funds);
+            console.log('基金UI更新完成');
+        }
+        
+        // 渲染基金列表
+        function renderFunds(funds) {
+            // 存储当前基金数据，用于排序
+            currentFunds = funds;
+            
+            const tableBody = document.getElementById('funds-table-body');
+            
+            tableBody.innerHTML = funds.map(fund => {
+                // 红色表示涨，绿色表示跌
+                const changeClass = fund.estimate_change.startsWith('-') ? 'negative' : 'positive';
+                
+                // 计算每日收益预估
+                const amount = fund.amount || 0;
+                const estimateChange = parseFloat(fund.estimate_change) || 0;
+                const dailyProfit = (amount * estimateChange / 100).toFixed(2);
+                const profitClass = dailyProfit < 0 ? 'negative' : 'positive';
+                
+                // 计算当前市值
+                const estimate = parseFloat(fund.estimate) || 0;
+                // 注意：这里需要知道基金的份额才能准确计算市值
+                // 由于当前数据结构中没有份额信息，我们假设投资金额是按净值计算的初始投资
+                // 实际应用中，应该存储份额而不是金额，或者同时存储两者
+                const currentValue = (amount * estimate).toFixed(2);
+                
+                // 构建操作按钮
+                let actionButtons = '';
+                if (fund.exists !== false) {
+                    // 已存在的基金显示详情和刷新按钮
+                    actionButtons = `
+                        <button style="background-color: #3498db; padding: 5px 10px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 5px;" onclick="showFundDetail('${fund.code}', '${fund.name}', '${fund.type}', '${fund.sector}', '${fund.estimate}', '${fund.estimate_change}', '${fund.time}', '${amount}', '${fund.shares || 0}')">详情</button>
+                        <button style="background-color: #f39c12; padding: 5px 10px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;" onclick="refreshFund('${fund.code}', this)">刷新</button>
+                    `;
+                } else {
+                    // 不存在的基金显示添加按钮
+                    actionButtons = `
+                        <button style="background-color: #27ae60; padding: 5px 10px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;" onclick="addFundFromSearch('${fund.code}', '${fund.name}')">添加</button>
+                    `;
+                }
+                
+                return `
+                    <tr>
+                        <td>${fund.code}</td>
+                        <td>${fund.name}</td>
+                        <td>¥${parseFloat(amount).toFixed(2)}</td>
+                        <td>${parseFloat(fund.shares || 0).toFixed(4)}</td>
+                        <td>¥${currentValue}</td>
+                        <td>${fund.estimate}</td>
+                        <td class="${changeClass}">${fund.estimate_change}%</td>
+                        <td class="${profitClass}">¥${dailyProfit}</td>
+                        <td>${fund.time}</td>
+                        <td class="action">
+                            ${actionButtons}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // 排序基金列表
+        function sortFunds(field) {
+            // 切换排序顺序
+            if (currentSortField === field) {
+                currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortField = field;
+                currentSortOrder = 'asc';
+            }
+            
+            // 重置所有排序指示器
+            document.querySelectorAll('.sort-indicator').forEach(el => {
+                el.className = 'sort-indicator';
+            });
+            
+            // 设置当前排序指示器
+            const sortIndicator = document.getElementById(`sort-${field}`);
+            if (sortIndicator) {
+                sortIndicator.className = `sort-indicator ${currentSortOrder}`;
+            }
+            
+            // 排序基金数据
+            const sortedFunds = [...currentFunds].sort((a, b) => {
+                let aValue = a[field];
+                let bValue = b[field];
+                
+                // 处理不同类型的值
+                if (field === 'estimate' || field === 'estimate_change' || field === 'amount' || field === 'shares') {
+                    // 数值类型排序
+                    aValue = parseFloat(aValue) || 0;
+                    bValue = parseFloat(bValue) || 0;
+                } else if (field === 'current_value') {
+                    // 当前市值排序
+                    const aAmount = parseFloat(a.amount) || 0;
+                    const aEstimate = parseFloat(a.estimate) || 0;
+                    const bAmount = parseFloat(b.amount) || 0;
+                    const bEstimate = parseFloat(b.estimate) || 0;
+                    aValue = (aAmount * aEstimate);
+                    bValue = (bAmount * bEstimate);
+                } else if (field === 'daily_profit') {
+                    // 每日收益排序
+                    const aAmount = parseFloat(a.amount) || 0;
+                    const aChange = parseFloat(a.estimate_change) || 0;
+                    const bAmount = parseFloat(b.amount) || 0;
+                    const bChange = parseFloat(b.estimate_change) || 0;
+                    aValue = (aAmount * aChange / 100);
+                    bValue = (bAmount * bChange / 100);
+                } else if (field === 'time') {
+                    // 时间类型排序
+                    aValue = new Date(aValue).getTime() || 0;
+                    bValue = new Date(bValue).getTime() || 0;
+                }
+                
+                // 执行排序
+                if (aValue < bValue) {
+                    return currentSortOrder === 'asc' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return currentSortOrder === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+            
+            // 重新渲染排序后的基金列表
+            renderFunds(sortedFunds);
+        }
+        
+        // 添加基金
+        async function addFund(event) {
+            event.preventDefault();
+            
+            const code = document.getElementById('fund-code').value.trim();
+            const name = document.getElementById('fund-name').value.trim();
+            const amount = document.getElementById('fund-amount').value.trim();
+            const messageDiv = document.getElementById('add-message');
+            
+            if (!code) {
+                messageDiv.textContent = '请输入基金代码';
+                messageDiv.className = 'error';
+                return;
+            }
+            
+            if (!amount || parseFloat(amount) <= 0) {
+                messageDiv.textContent = '请输入有效的投资金额';
+                messageDiv.className = 'error';
+                return;
+            }
+            
+            let fundName = name;
+            if (!fundName) {
+                // 如果基金名称为空，尝试获取
+                await getFundNameByCode(code);
+                fundName = document.getElementById('fund-name').value.trim();
+                if (!fundName) {
+                    return;
+                }
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/funds`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ code, name: fundName, amount: parseFloat(amount) })
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // 认证失败，跳转到登录页面
+                        logout();
+                        throw new Error('登录已过期，请重新登录');
+                    }
+                    const error = await response.json();
+                    throw new Error(error.detail || '添加基金失败');
+                }
+                
+                const result = await response.json();
+                messageDiv.textContent = result.message;
+                messageDiv.className = 'success';
+                
+                // 清空表单
+                document.getElementById('fund-code').value = '';
+                document.getElementById('fund-name').value = '';
+                document.getElementById('fund-amount').value = '';
+                
+                // 刷新基金列表
+                fetchFunds();
+                
+                // 3秒后清除消息
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                }, 3000);
+            } catch (error) {
+                messageDiv.textContent = error.message;
+                messageDiv.className = 'error';
+            }
+        }
+        
+        // 从搜索结果添加基金
+        async function addFundFromSearch(code, name) {
+            const messageDiv = document.getElementById('add-message');
+            
+            // 弹出对话框让用户输入投资金额
+            const amount = prompt('请输入投资金额：', '1000');
+            
+            if (!amount || parseFloat(amount) <= 0) {
+                messageDiv.textContent = '请输入有效的投资金额';
+                messageDiv.className = 'error';
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                }, 3000);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/funds`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ code, name, amount: parseFloat(amount) })
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // 认证失败，跳转到登录页面
+                        logout();
+                        throw new Error('登录已过期，请重新登录');
+                    }
+                    const error = await response.json();
+                    throw new Error(error.detail || '添加基金失败');
+                }
+                
+                const result = await response.json();
+                messageDiv.textContent = result.message;
+                messageDiv.className = 'success';
+                
+                // 刷新基金列表
+                fetchFunds();
+                
+                // 3秒后清除消息
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                }, 3000);
+            } catch (error) {
+                messageDiv.textContent = error.message;
+                messageDiv.className = 'error';
+                
+                // 3秒后清除消息
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                }, 3000);
+            }
+        }
+        
+        // 为基金追加金额
+        async function addAmountToFund(code, name) {
+            const messageDiv = document.getElementById('add-message');
+            
+            // 弹出对话框让用户输入要追加的金额
+            const addAmount = prompt('请输入要追加的金额：', '1000');
+            
+            if (!addAmount || parseFloat(addAmount) <= 0) {
+                messageDiv.textContent = '请输入有效的追加金额';
+                messageDiv.className = 'error';
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                }, 3000);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/funds/${code}/amount`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ amount: parseFloat(addAmount) })
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // 认证失败，跳转到登录页面
+                        logout();
+                        throw new Error('登录已过期，请重新登录');
+                    }
+                    const error = await response.json();
+                    throw new Error(error.detail || '追加金额失败');
+                }
+                
+                const result = await response.json();
+                messageDiv.textContent = result.message;
+                messageDiv.className = 'success';
+                
+                // 刷新基金列表
+                fetchFunds();
+                
+                // 3秒后清除消息
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                }, 3000);
+            } catch (error) {
+                messageDiv.textContent = error.message;
+                messageDiv.className = 'error';
+                
+                // 3秒后清除消息
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                }, 3000);
+            }
+        }
+        
+        // 卖出基金
+        async function sellFund(code, name, currentAmount) {
+            const messageDiv = document.getElementById('add-message');
+            
+            // 弹出对话框让用户输入要卖出的金额
+            const sellAmount = prompt(`请输入要卖出的金额（当前持有：¥${parseFloat(currentAmount).toFixed(2)}）：`, '1000');
+            
+            if (!sellAmount || parseFloat(sellAmount) <= 0) {
+                messageDiv.textContent = '请输入有效的卖出金额';
+                messageDiv.className = 'error';
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                }, 3000);
+                return;
+            }
+            
+            const sellAmountValue = parseFloat(sellAmount);
+            if (sellAmountValue > parseFloat(currentAmount)) {
+                messageDiv.textContent = '卖出金额不能超过当前持有金额';
+                messageDiv.className = 'error';
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                }, 3000);
+                return;
+            }
+            
+            try {
+                // 计算卖出后的金额
+                const newAmount = parseFloat(currentAmount) - sellAmountValue;
+                
+                const response = await fetch(`${API_BASE_URL}/funds/${code}/amount`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ amount: newAmount, sell: true })
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // 认证失败，跳转到登录页面
+                        logout();
+                        throw new Error('登录已过期，请重新登录');
+                    }
+                    const error = await response.json();
+                    throw new Error(error.detail || '卖出基金失败');
+                }
+                
+                const result = await response.json();
+                messageDiv.textContent = `成功卖出 ¥${sellAmountValue.toFixed(2)}，剩余持有金额：¥${newAmount.toFixed(2)}`;
+                messageDiv.className = 'success';
+                
+                // 刷新基金列表
+                fetchFunds();
+                
+                // 3秒后清除消息
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                }, 3000);
+            } catch (error) {
+                messageDiv.textContent = error.message;
+                messageDiv.className = 'error';
+                
+                // 3秒后清除消息
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                }, 3000);
+            }
+        }
+        
+        // 删除基金
+        async function deleteFund(code) {
+            if (!confirm(`确定要删除基金 ${code} 吗？`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/funds/${code}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // 认证失败，跳转到登录页面
+                        logout();
+                        throw new Error('登录已过期，请重新登录');
+                    }
+                    const error = await response.json();
+                    throw new Error(error.detail || '删除基金失败');
+                }
+                
+                // 刷新基金列表
+                fetchFunds();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+        
+        // 搜索基金
+        async function searchFunds() {
+            const keyword = document.getElementById('search-input').value.trim();
+            
+            if (!keyword) {
+                // 如果关键词为空，显示所有基金
+                fetchFunds();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/funds/search?keyword=${encodeURIComponent(keyword)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // 认证失败，跳转到登录页面
+                        logout();
+                        throw new Error('登录已过期，请重新登录');
+                    }
+                    throw new Error('搜索基金失败');
+                }
+                
+                const funds = await response.json();
+                renderFunds(funds);
+            } catch (error) {
+                console.error('搜索基金失败:', error);
+                alert('搜索失败，请重试');
+            }
+        }
+        
+        // 导出基金
+        async function exportFunds() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/funds/export`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                console.log('导出响应:', `${API_BASE_URL}/funds/export 66`, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    ok: response.ok
+                }, "99", authToken);
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // 认证失败，跳转到登录页面
+                        logout();
+                        throw new Error('登录已过期，请重新登录');
+                    }
+                    // 尝试获取详细的错误信息
+                    try {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || '导出基金失败');
+                    } catch (e) {
+                        throw new Error('导出基金失败');
+                    }
+                }
+                
+                // 下载文件
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `funds_${currentUser}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('导出基金失败:', error);
+                alert(`导出失败: ${error.message}`);
+            }
+        }
+        
+        // 导入基金
+        async function importFunds(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const response = await fetch(`${API_BASE_URL}/funds/import`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // 认证失败，跳转到登录页面
+                        logout();
+                        throw new Error('登录已过期，请重新登录');
+                    }
+                    const error = await response.json();
+                    throw new Error(error.detail || '导入基金失败');
+                }
+                
+                const result = await response.json();
+                alert(result.message);
+                // 刷新基金列表
+                fetchFunds();
+                // 重置文件输入
+                event.target.value = '';
+            } catch (error) {
+                console.error('导入基金失败:', error);
+                alert('导入失败，请重试');
+                // 重置文件输入
+                event.target.value = '';
+            }
+        }
+        
+        // 显示基金详情
+        function showFundDetail(code, name, type, sector, estimate, estimateChange, time, amount = 0, shares = 0) {
+            // 创建模态框
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            modal.style.display = 'flex';
+            modal.style.justifyContent = 'center';
+            modal.style.alignItems = 'center';
+            modal.style.zIndex = '1000';
+            
+            // 创建模态框内容
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+            modalContent.style.backgroundColor = 'white';
+            modalContent.style.padding = '20px';
+            modalContent.style.borderRadius = '8px';
+            modalContent.style.width = '800px';
+            modalContent.style.height = '700px';
+            modalContent.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+            modalContent.style.overflow = 'auto';
+            
+            // 计算每日收益预估
+            const dailyProfit = (parseFloat(amount) * parseFloat(estimateChange) / 100).toFixed(2);
+            
+            // 添加基金详情
+            modalContent.innerHTML = `
+                <h3 style="margin-bottom: 15px; color: #2c3e50;">基金详情 - ${name} (${code})</h3>
+                
+                <!-- 标签页 -->
+                <div style="display: flex; margin-bottom: 20px; border-bottom: 1px solid #ddd;">
+                    <button id="tab-detail" style="padding: 10px 20px; border: none; background-color: #f8f9fa; cursor: pointer; font-size: 14px; font-weight: bold;">基本信息</button>
+                    <button id="tab-chart" style="padding: 10px 20px; border: none; background-color: #fff; cursor: pointer; font-size: 14px;">历史图表</button>
+                </div>
+                
+                <!-- 基本信息内容 -->
+                <div id="content-detail" style="display: block;">
+                    <div style="margin-bottom: 10px;"><strong>基金代码:</strong> ${code}</div>
+                    <div style="margin-bottom: 10px;"><strong>基金名称:</strong> ${name}</div>
+                    <div style="margin-bottom: 10px;"><strong>投资金额:</strong> ¥${parseFloat(amount).toFixed(2)}</div>
+                    <div style="margin-bottom: 10px;"><strong>持有份额:</strong> ${parseFloat(shares).toFixed(4)}</div>
+                    <div style="margin-bottom: 10px;"><strong>当前市值:</strong> ¥${(parseFloat(amount) * parseFloat(estimate)).toFixed(2)}</div>
+                    <div style="margin-bottom: 10px;"><strong>基金类型:</strong> ${type}</div>
+                    <div style="margin-bottom: 10px;"><strong>所属板块:</strong> ${sector}</div>
+                    <div style="margin-bottom: 10px;"><strong>实时净值预估:</strong> ${estimate}</div>
+                    <div style="margin-bottom: 10px;"><strong>预估涨跌幅:</strong> <span class="${estimateChange.startsWith('-') ? 'negative' : 'positive'}">${estimateChange}%</span></div>
+                    <div style="margin-bottom: 10px;"><strong>每日收益预估:</strong> <span class="${dailyProfit < 0 ? 'negative' : 'positive'}">¥${dailyProfit}</span></div>
+                    <div style="margin-bottom: 10px;"><strong>更新时间:</strong> ${time}</div>
+                    
+                    <!-- 操作按钮 -->
+                    <div style="margin-top: 20px;">
+                        <button onclick="addAmountToFund('${code}', '${name}')" style="padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 10px;">追加金额</button>
+                        <button onclick="sellFund('${code}', '${name}', '${amount}')" style="padding: 10px 20px; background-color: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 10px;">卖出基金</button>
+                        <button onclick="deleteFund('${code}')" style="padding: 10px 20px; background-color: #e67e22; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">删除基金</button>
+                    </div>
+                </div>
+                
+                <!-- 历史图表内容 -->
+                <div id="content-chart" style="display: none;">
+                    <div id="fund-chart-container" style="width: 100%; height: 500px;"></div>
+                </div>
+                
+                <!-- 关闭按钮 -->
+                <button id="close-modal-btn" style="padding: 10px 20px; background-color: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-top: 20px;">关闭</button>
+            `;
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // 为关闭按钮添加点击事件监听器
+            document.getElementById('close-modal-btn').addEventListener('click', function() {
+                document.body.removeChild(modal);
+            });
+            
+            // 标签页切换
+            document.getElementById('tab-detail').addEventListener('click', function() {
+                document.getElementById('content-detail').style.display = 'block';
+                document.getElementById('content-chart').style.display = 'none';
+                this.style.backgroundColor = '#f8f9fa';
+                document.getElementById('tab-chart').style.backgroundColor = '#fff';
+            });
+            
+            document.getElementById('tab-chart').addEventListener('click', function() {
+                document.getElementById('content-detail').style.display = 'none';
+                document.getElementById('content-chart').style.display = 'block';
+                this.style.backgroundColor = '#f8f9fa';
+                document.getElementById('tab-detail').style.backgroundColor = '#fff';
+                
+                // 加载历史数据并绘制图表
+                loadFundHistoryChart(code, name);
+            });
+        }
+        
+        // 加载基金历史图表
+        async function loadFundHistoryChart(code, name) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/funds/${code}/history`);
+                if (!response.ok) {
+                    throw new Error('获取历史数据失败');
+                }
+                
+                const data = await response.json();
+                const history = data.history;
+                
+                // 准备图表数据
+                const dates = history.map(item => item.date);
+                const prices = history.map(item => item.price);
+                
+                // 绘制图表
+                const chart = echarts.init(document.getElementById('fund-chart-container'));
+                const option = {
+                    title: {
+                        text: `${name} 历史价格走势`,
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function(params) {
+                            const data = params[0].data;
+                            return `${params[0].name}<br/>价格: ${data} 元`;
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: dates,
+                        axisLabel: {
+                            rotate: 45
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '价格 (元)'
+                    },
+                    series: [{
+                        data: prices,
+                        type: 'line',
+                        smooth: true,
+                        areaStyle: {
+                            opacity: 0.1
+                        }
+                    }]
+                };
+                chart.setOption(option);
+                
+                // 响应式调整
+                window.addEventListener('resize', function() {
+                    chart.resize();
+                });
+            } catch (error) {
+                console.error('加载历史图表失败:', error);
+                document.getElementById('fund-chart-container').innerHTML = `<p style="color: #e74c3c; text-align: center; margin-top: 50px;">加载历史数据失败</p>`;
+            }
+        }
+        
+        // 刷新单个基金数据
+        async function refreshFund(code, button) {
+            try {
+                // 显示加载状态
+                const originalText = button.textContent;
+                button.textContent = '刷新中...';
+                button.disabled = true;
+                
+                // 刷新基金列表
+                await fetchFunds();
+                
+                // 恢复按钮状态
+                button.textContent = originalText;
+                button.disabled = false;
+            } catch (error) {
+                console.error('刷新基金失败:', error);
+                alert('刷新失败，请重试');
+            }
+        }
+        
+        // 打开设置面板
+        function openSettings() {
+            alert('设置功能正在开发中');
+        }
+        
+        // 应用颜色方案
+        function applyColorScheme() {
+            // 这里可以根据用户设置或系统主题应用不同的颜色方案
+            // 目前使用默认的颜色方案
+        }
+        
+        // 获取上海金数据
+        async function fetchGoldData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/gold`);
+                if (!response.ok) {
+                    throw new Error('获取上海金数据失败');
+                }
+                
+                const goldData = await response.json();
+                
+                // 更新UI
+                document.getElementById('gold-price').textContent = goldData.price;
+                document.getElementById('gold-change').textContent = goldData.change;
+                document.getElementById('gold-change').className = goldData.change < 0 ? 'negative' : 'positive';
+                document.getElementById('gold-time').textContent = goldData.time;
+                document.getElementById('gold-code').textContent = goldData.code;
+                
+                // 获取实时数据并绘制分时图
+                await loadGoldMinuteChart();
+            } catch (error) {
+                console.error('获取上海金数据失败:', error);
+                alert('获取上海金数据失败，请重试');
+            }
+        }
+        
+        // 存储全部基金相关变量
+        let currentAllFunds = [];
+        let currentAllFundsSortField = null;
+        let currentAllFundsSortOrder = 'asc';
+        
+        // 获取单个基金的实时净值预估
+        async function getFundEstimate(code) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/funds/info/${code}`);
+                if (!response.ok) {
+                    throw new Error('获取基金信息失败');
+                }
+                
+                const fundInfo = await response.json();
+                return {
+                    estimate: fundInfo.estimate || '0.00',
+                    estimate_change: fundInfo.estimate_change || '0.00',
+                    time: fundInfo.time || new Date().toLocaleString(),
+                    type: fundInfo.type || '混合型',
+                    sector: fundInfo.sector || '未分类'
+                };
+            } catch (error) {
+                console.error(`获取基金${code}信息失败:`, error);
+                // 返回默认数据
+                return {
+                    estimate: '0.00',
+                    estimate_change: '0.00',
+                    time: new Date().toLocaleString(),
+                    type: '混合型',
+                    sector: '未分类'
+                };
+            }
+        }
+        
+        // 获取全部基金数据
+        async function fetchAllFunds() {
+            console.log('开始获取全部基金数据:', new Date().toLocaleString());
+            
+            // 显示加载状态
+            const tableBody = document.getElementById('all-funds-table-body');
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="loading">正在刷新数据...</td>
+                </tr>
+            `;
+            
+            try {
+                // 获取热门基金数据
+                const hotFunds = [
+                    { code: '000001', name: '华夏成长混合' },
+                    { code: '000002', name: '华夏大盘精选混合' },
+                    { code: '000003', name: '华夏现金增利货币' },
+                    { code: '000004', name: '华夏回报混合A' },
+                    { code: '000005', name: '华夏上证50ETF' },
+                    { code: '000006', name: '华夏海外收益债券A' },
+                    { code: '000007', name: '华夏全球股票(QDII)' },
+                    { code: '000008', name: '华夏稳增混合' },
+                    { code: '000009', name: '华夏兴华混合' },
+                    { code: '000010', name: '华夏策略混合' },
+                    { code: '000011', name: '华夏大盘精选混合C' },
+                    { code: '000012', name: '华夏亚债中国指数C' },
+                    { code: '000013', name: '华夏总回报债券A' },
+                    { code: '000014', name: '华夏总回报债券C' },
+                    { code: '000015', name: '华夏纯债债券A' },
+                    { code: '000016', name: '华夏纯债债券C' },
+                    { code: '000017', name: '华夏安康信用债债券A' },
+                    { code: '000018', name: '华夏安康信用债债券C' },
+                    { code: '000019', name: '华夏永福养老理财混合' },
+                    { code: '000020', name: '华夏永福养老理财混合C' }
+                ];
+                
+                // 获取每个基金的实时净值预估
+                const result = [];
+                for (const fund of hotFunds) {
+                    try {
+                        const estimate_data = await getFundEstimate(fund.code);
+                        result.push({
+                            code: fund.code,
+                            name: fund.name,
+                            estimate: estimate_data.estimate,
+                            estimate_change: estimate_data.estimate_change,
+                            time: estimate_data.time,
+                            type: estimate_data.type,
+                            sector: estimate_data.sector
+                        });
+                    } catch (error) {
+                        console.error(`获取基金${fund.code}数据失败:`, error);
+                        // 如果获取失败，添加一个默认数据
+                        result.push({
+                            code: fund.code,
+                            name: fund.name,
+                            estimate: '0.00',
+                            estimate_change: '0.00',
+                            time: new Date().toLocaleString(),
+                            type: '混合型',
+                            sector: '未分类'
+                        });
+                    }
+                }
+                
+                console.log('成功获取全部基金数据:', result.length, '条记录');
+                updateAllFundsUI(result);
+            } catch (error) {
+                console.error('获取全部基金列表失败:', error);
+                document.getElementById('all-funds-table-body').innerHTML = `
+                    <tr>
+                        <td colspan="8" class="loading">获取数据失败，请刷新页面重试</td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // 更新全部基金列表UI
+        function updateAllFundsUI(funds) {
+            console.log('开始更新全部基金UI:', funds.length, '条记录');
+            const tableBody = document.getElementById('all-funds-table-body');
+            
+            if (funds.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="loading">暂无基金数据</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // 始终重新渲染整个列表，确保页面与最新数据完全同步
+            renderAllFunds(funds);
+            console.log('全部基金UI更新完成');
+        }
+        
+        // 渲染全部基金列表
+        function renderAllFunds(funds) {
+            // 存储当前基金数据，用于排序
+            currentAllFunds = funds;
+            
+            const tableBody = document.getElementById('all-funds-table-body');
+            
+            tableBody.innerHTML = funds.map(fund => {
+                // 红色表示涨，绿色表示跌
+                const changeClass = fund.estimate_change.startsWith('-') ? 'negative' : 'positive';
+                
+                // 构建操作按钮
+                const actionButtons = `
+                    <button style="background-color: #3498db; padding: 5px 10px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 5px;" onclick="showFundDetail('${fund.code}', '${fund.name}', '${fund.type}', '${fund.sector}', '${fund.estimate}', '${fund.estimate_change}', '${fund.time}', '0', '0')">详情</button>
+                    <button style="background-color: #27ae60; padding: 5px 10px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;" onclick="addFundFromSearch('${fund.code}', '${fund.name}')">添加</button>
+                `;
+                
+                return `
+                    <tr>
+                        <td>${fund.code}</td>
+                        <td>${fund.name}</td>
+                        <td>${fund.type}</td>
+                        <td>${fund.sector}</td>
+                        <td>${fund.estimate}</td>
+                        <td class="${changeClass}">${fund.estimate_change}%</td>
+                        <td>${fund.time}</td>
+                        <td class="action">
+                            ${actionButtons}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // 搜索全部基金
+        async function searchAllFunds() {
+            const searchTerm = document.getElementById('all-funds-search-input').value.trim();
+            if (!searchTerm) {
+                await fetchAllFunds();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/funds/search?query=${encodeURIComponent(searchTerm)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('搜索基金失败');
+                }
+                
+                const searchResults = await response.json();
+                const funds = searchResults.map(fund => ({
+                    code: fund.code,
+                    name: fund.name,
+                    estimate: fund.estimate || '0.00',
+                    estimate_change: fund.estimate_change || '0.00',
+                    time: fund.time || new Date().toLocaleString(),
+                    type: fund.type || '混合型',
+                    sector: fund.sector || '未分类'
+                }));
+                
+                updateAllFundsUI(funds);
+            } catch (error) {
+                console.error('搜索基金失败:', error);
+                alert('搜索基金失败，请重试');
+            }
+        }
+        
+        // 排序全部基金列表
+        function sortAllFunds(field) {
+            // 切换排序顺序
+            if (currentAllFundsSortField === field) {
+                currentAllFundsSortOrder = currentAllFundsSortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentAllFundsSortField = field;
+                currentAllFundsSortOrder = 'asc';
+            }
+            
+            // 重置所有排序指示器
+            document.querySelectorAll('#all-funds-page .sort-indicator').forEach(el => {
+                el.className = 'sort-indicator';
+            });
+            
+            // 设置当前排序指示器
+            const sortIndicator = document.getElementById(`all-funds-sort-${field}`);
+            if (sortIndicator) {
+                sortIndicator.className = `sort-indicator ${currentAllFundsSortOrder}`;
+            }
+            
+            // 排序基金数据
+            const sortedFunds = [...currentAllFunds].sort((a, b) => {
+                let aValue = a[field];
+                let bValue = b[field];
+                
+                // 处理不同类型的值
+                if (field === 'estimate' || field === 'estimate_change') {
+                    // 数值类型排序
+                    aValue = parseFloat(aValue) || 0;
+                    bValue = parseFloat(bValue) || 0;
+                } else if (field === 'code' || field === 'name' || field === 'type' || field === 'sector') {
+                    // 字符串类型排序
+                    aValue = aValue || '';
+                    bValue = bValue || '';
+                } else if (field === 'time') {
+                    // 时间类型排序
+                    aValue = new Date(aValue).getTime() || 0;
+                    bValue = new Date(bValue).getTime() || 0;
+                }
+                
+                // 执行排序
+                if (aValue < bValue) {
+                    return currentAllFundsSortOrder === 'asc' ? -1 : 1;
+                } else if (aValue > bValue) {
+                    return currentAllFundsSortOrder === 'asc' ? 1 : -1;
+                } else {
+                    return 0;
+                }
+            });
+            
+            // 重新渲染排序后的基金列表
+            renderAllFunds(sortedFunds);
+        }
+        
+        // 加载上海金分时图
+        async function loadGoldMinuteChart() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/gold/minute`);
+                if (!response.ok) {
+                    throw new Error('获取上海金分时数据失败');
+                }
+                
+                const data = await response.json();
+                const minuteData = data.minute_data;
+                
+                // 准备分时图数据
+                const times = minuteData.map(item => item.time);
+                const prices = minuteData.map(item => item.price);
+                
+                // 绘制分时图
+                const chart = echarts.init(document.getElementById('gold-chart-container'));
+                const option = {
+                    title: {
+                        text: '上海金 分时图',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        },
+                        formatter: function(params) {
+                            const data = params[0].data;
+                            return `${params[0].name}<br/>价格: ${data} 元/克`;
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: times,
+                        boundaryGap: false,
+                        axisLabel: {
+                            rotate: 45
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '价格 (元/克)',
+                        scale: true
+                    },
+                    series: [{
+                        name: '上海金',
+                        type: 'line',
+                        data: prices,
+                        smooth: true,
+                        showSymbol: false,
+                        areaStyle: {
+                            opacity: 0.1
+                        },
+                        itemStyle: {
+                            color: '#3498db'
+                        }
+                    }]
+                };
+                
+                chart.setOption(option);
+                
+                // 响应式调整
+                window.addEventListener('resize', function() {
+                    chart.resize();
+                });
+            } catch (error) {
+                console.error('加载上海金分时图失败:', error);
+                document.getElementById('gold-chart-container').innerHTML = `<p style="color: #e74c3c; text-align: center; margin-top: 50px;">加载分时数据失败</p>`;
+            }
+        }
+        
+        // 加载上海金历史图表
+        async function loadGoldHistoryChart() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/gold/history`);
+                if (!response.ok) {
+                    throw new Error('获取上海金历史数据失败');
+                }
+                
+                const data = await response.json();
+                const history = data.history;
+                
+                // 准备K线图数据 [开盘价, 收盘价, 最低价, 最高价]
+                const dates = history.map(item => item.date);
+                const klineData = history.map(item => [
+                    item.open,
+                    item.close,
+                    item.low,
+                    item.high
+                ]);
+                
+                // 绘制K线图
+                const chart = echarts.init(document.getElementById('gold-chart-container'));
+                const option = {
+                    title: {
+                        text: '上海金 历史K线图',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        },
+                        formatter: function(params) {
+                            const data = params[0].data;
+                            return `${params[0].name}<br/>` +
+                                `开盘: ${data[0]} 元/克<br/>` +
+                                `收盘: ${data[1]} 元/克<br/>` +
+                                `最低: ${data[2]} 元/克<br/>` +
+                                `最高: ${data[3]} 元/克`;
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: dates,
+                        scale: true,
+                        boundaryGap: false,
+                        axisLabel: {
+                            rotate: 45
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        scale: true,
+                        name: '价格 (元/克)'
+                    },
+                    series: [{
+                        name: '上海金',
+                        type: 'candlestick',
+                        data: klineData,
+                        itemStyle: {
+                            color: '#ef4136',  // 上涨颜色
+                            color0: '#4caf50', // 下跌颜色
+                            borderColor: '#ef4136',
+                            borderColor0: '#4caf50'
+                        }
+                    }]
+                };
+                
+                chart.setOption(option);
+                
+                // 响应式调整
+                window.addEventListener('resize', function() {
+                    chart.resize();
+                });
+            } catch (error) {
+                console.error('加载上海金历史图表失败:', error);
+                document.getElementById('gold-chart-container').innerHTML = `<p style="color: #e74c3c; text-align: center; margin-top: 50px;">加载历史数据失败</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
