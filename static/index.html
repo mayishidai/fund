@@ -1671,68 +1671,92 @@
             `;
             
             try {
-                // 获取热门基金数据
-                const hotFunds = [
-                    { code: '000001', name: '华夏成长混合' },
-                    { code: '000002', name: '华夏大盘精选混合' },
-                    { code: '000003', name: '华夏现金增利货币' },
-                    { code: '000004', name: '华夏回报混合A' },
-                    { code: '000005', name: '华夏上证50ETF' },
-                    { code: '000006', name: '华夏海外收益债券A' },
-                    { code: '000007', name: '华夏全球股票(QDII)' },
-                    { code: '000008', name: '华夏稳增混合' },
-                    { code: '000009', name: '华夏兴华混合' },
-                    { code: '000010', name: '华夏策略混合' },
-                    { code: '000011', name: '华夏大盘精选混合C' },
-                    { code: '000012', name: '华夏亚债中国指数C' },
-                    { code: '000013', name: '华夏总回报债券A' },
-                    { code: '000014', name: '华夏总回报债券C' },
-                    { code: '000015', name: '华夏纯债债券A' },
-                    { code: '000016', name: '华夏纯债债券C' },
-                    { code: '000017', name: '华夏安康信用债债券A' },
-                    { code: '000018', name: '华夏安康信用债债券C' },
-                    { code: '000019', name: '华夏永福养老理财混合' },
-                    { code: '000020', name: '华夏永福养老理财混合C' }
-                ];
-                
-                // 获取每个基金的实时净值预估
-                const result = [];
-                for (const fund of hotFunds) {
-                    try {
-                        const estimate_data = await getFundEstimate(fund.code);
-                        result.push({
-                            code: fund.code,
-                            name: fund.name,
-                            estimate: estimate_data.estimate,
-                            estimate_change: estimate_data.estimate_change,
-                            time: estimate_data.time,
-                            type: estimate_data.type,
-                            sector: estimate_data.sector
-                        });
-                    } catch (error) {
-                        console.error(`获取基金${fund.code}数据失败:`, error);
-                        // 如果获取失败，添加一个默认数据
-                        result.push({
-                            code: fund.code,
-                            name: fund.name,
-                            estimate: '0.00',
-                            estimate_change: '0.00',
-                            time: new Date().toLocaleString(),
-                            type: '混合型',
-                            sector: '未分类'
-                        });
-                    }
+                // 从后端API获取全部基金数据
+                const response = await fetch(`${API_BASE_URL}/funds/all`);
+                if (!response.ok) {
+                    throw new Error('获取全部基金数据失败');
                 }
                 
+                const result = await response.json();
                 console.log('成功获取全部基金数据:', result.length, '条记录');
                 updateAllFundsUI(result);
             } catch (error) {
                 console.error('获取全部基金列表失败:', error);
-                document.getElementById('all-funds-table-body').innerHTML = `
-                    <tr>
-                        <td colspan="8" class="loading">获取数据失败，请刷新页面重试</td>
-                    </tr>
-                `;
+                // 如果API调用失败，使用备用方案
+                try {
+                    // 获取热门基金数据（备用方案）
+                    const hotFunds = [
+                        { code: '000001', name: '华夏成长混合' },
+                        { code: '000002', name: '华夏大盘精选混合' },
+                        { code: '000003', name: '华夏现金增利货币' },
+                        { code: '000004', name: '华夏回报混合A' },
+                        { code: '000005', name: '华夏上证50ETF' },
+                        { code: '000006', name: '华夏海外收益债券A' },
+                        { code: '000007', name: '华夏全球股票(QDII)' },
+                        { code: '000008', name: '华夏稳增混合' },
+                        { code: '000009', name: '华夏兴华混合' },
+                        { code: '000010', name: '华夏策略混合' },
+                        { code: '000011', name: '华夏大盘精选混合C' },
+                        { code: '000012', name: '华夏亚债中国指数C' },
+                        { code: '000013', name: '华夏总回报债券A' },
+                        { code: '000014', name: '华夏总回报债券C' },
+                        { code: '000015', name: '华夏纯债债券A' },
+                        { code: '000016', name: '华夏纯债债券C' },
+                        { code: '000017', name: '华夏安康信用债债券A' },
+                        { code: '000018', name: '华夏安康信用债债券C' },
+                        { code: '000019', name: '华夏永福养老理财混合' },
+                        { code: '000020', name: '华夏永福养老理财混合C' },
+                        { code: '000021', name: '华夏优势增长混合' },
+                        { code: '000022', name: '华夏领先股票' },
+                        { code: '000023', name: '华夏安康信用债债券E' },
+                        { code: '000024', name: '华夏新兴消费混合A' },
+                        { code: '000025', name: '华夏新兴消费混合C' },
+                        { code: '000026', name: '华夏稳盛灵活配置混合A' },
+                        { code: '000027', name: '华夏稳盛灵活配置混合C' },
+                        { code: '000028', name: '华夏新锦源混合A' },
+                        { code: '000029', name: '华夏新锦源混合C' },
+                        { code: '000031', name: '华夏复兴混合' }
+                    ];
+                    
+                    // 获取每个基金的实时净值预估
+                    const fallbackResult = [];
+                    for (const fund of hotFunds) {
+                        try {
+                            const estimate_data = await getFundEstimate(fund.code);
+                            fallbackResult.push({
+                                code: fund.code,
+                                name: fund.name,
+                                estimate: estimate_data.estimate,
+                                estimate_change: estimate_data.estimate_change,
+                                time: estimate_data.time,
+                                type: estimate_data.type,
+                                sector: estimate_data.sector
+                            });
+                        } catch (error) {
+                            console.error(`获取基金${fund.code}数据失败:`, error);
+                            // 如果获取失败，添加一个默认数据
+                            fallbackResult.push({
+                                code: fund.code,
+                                name: fund.name,
+                                estimate: '0.00',
+                                estimate_change: '0.00',
+                                time: new Date().toLocaleString(),
+                                type: '混合型',
+                                sector: '未分类'
+                            });
+                        }
+                    }
+                    
+                    console.log('使用备用方案获取全部基金数据:', fallbackResult.length, '条记录');
+                    updateAllFundsUI(fallbackResult);
+                } catch (fallbackError) {
+                    console.error('备用方案也失败:', fallbackError);
+                    document.getElementById('all-funds-table-body').innerHTML = `
+                        <tr>
+                            <td colspan="8" class="loading">获取数据失败，请刷新页面重试</td>
+                        </tr>
+                    `;
+                }
             }
         }
         
@@ -1892,39 +1916,108 @@
                 const data = await response.json();
                 const minuteData = data.minute_data;
                 
+                if (minuteData.length === 0) {
+                    throw new Error('分时数据为空');
+                }
+                
                 // 准备分时图数据
                 const times = minuteData.map(item => item.time);
                 const prices = minuteData.map(item => item.price);
+                
+                // 计算开盘价（当天第一笔数据）
+                const openPrice = prices[0];
+                // 计算当前价（最后一笔数据）
+                const currentPrice = prices[prices.length - 1];
+                // 计算涨跌幅
+                const changePercent = ((currentPrice - openPrice) / openPrice * 100).toFixed(2);
+                // 计算涨跌额
+                const changeAmount = (currentPrice - openPrice).toFixed(2);
+                // 确定涨跌颜色
+                const isRise = changeAmount >= 0;
+                const priceColor = isRise ? '#ef4136' : '#4caf50';
                 
                 // 绘制分时图
                 const chart = echarts.init(document.getElementById('gold-chart-container'));
                 const option = {
                     title: {
-                        text: '上海金 分时图',
-                        left: 'center'
+                        text: `上海金 分时图`,
+                        left: 'center',
+                        subtext: `开盘: ${openPrice} 元/克 | 当前: ${currentPrice} 元/克 | ${isRise ? '+' : ''}${changeAmount} 元/克 (${isRise ? '+' : ''}${changePercent}%)`,
+                        subtextStyle: {
+                            color: priceColor,
+                            fontSize: 12
+                        }
                     },
                     tooltip: {
                         trigger: 'axis',
                         axisPointer: {
-                            type: 'cross'
+                            type: 'cross',
+                            label: {
+                                backgroundColor: '#6a7985'
+                            }
                         },
                         formatter: function(params) {
                             const data = params[0].data;
-                            return `${params[0].name}<br/>价格: ${data} 元/克`;
+                            const time = params[0].name;
+                            // 计算该时间点与开盘价的涨跌幅
+                            const timeChangePercent = ((data - openPrice) / openPrice * 100).toFixed(2);
+                            const timeChangeAmount = (data - openPrice).toFixed(2);
+                            const timeColor = timeChangeAmount >= 0 ? '#ef4136' : '#4caf50';
+                            
+                            return `${time}<br/>
+                                   <span style="color: ${priceColor};">价格: ${data} 元/克</span><br/>
+                                   <span style="color: ${timeColor};">涨跌: ${timeChangeAmount >= 0 ? '+' : ''}${timeChangeAmount} 元/克 (${timeChangeAmount >= 0 ? '+' : ''}${timeChangePercent}%)</span>`;
+                        },
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        borderColor: '#ddd',
+                        borderWidth: 1,
+                        textStyle: {
+                            color: '#333'
                         }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '15%',
+                        top: '15%',
+                        containLabel: true
                     },
                     xAxis: {
                         type: 'category',
                         data: times,
                         boundaryGap: false,
                         axisLabel: {
-                            rotate: 45
+                            rotate: 45,
+                            fontSize: 10
+                        },
+                        axisLine: {
+                            lineStyle: {
+                                color: '#ddd'
+                            }
+                        },
+                        splitLine: {
+                            show: false
                         }
                     },
                     yAxis: {
                         type: 'value',
                         name: '价格 (元/克)',
-                        scale: true
+                        scale: true,
+                        axisLabel: {
+                            formatter: '{value}',
+                            fontSize: 10
+                        },
+                        axisLine: {
+                            lineStyle: {
+                                color: '#ddd'
+                            }
+                        },
+                        splitLine: {
+                            lineStyle: {
+                                color: '#f0f0f0',
+                                type: 'dashed'
+                            }
+                        }
                     },
                     series: [{
                         name: '上海金',
@@ -1933,10 +2026,23 @@
                         smooth: true,
                         showSymbol: false,
                         areaStyle: {
-                            opacity: 0.1
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                {
+                                    offset: 0,
+                                    color: priceColor + '33' // 33是透明度
+                                },
+                                {
+                                    offset: 1,
+                                    color: priceColor + '05' // 05是透明度
+                                }
+                            ])
+                        },
+                        lineStyle: {
+                            color: priceColor,
+                            width: 2
                         },
                         itemStyle: {
-                            color: '#3498db'
+                            color: priceColor
                         }
                     }]
                 };

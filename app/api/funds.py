@@ -395,6 +395,140 @@ async def get_fund(code: str = Query(..., description="基金代码"), current_u
         "current_value": current_value
     }
 
+# API端点：获取全部基金信息
+@router.get("/funds/all")
+async def get_all_funds():
+    # 热门基金列表，包含更多基金
+    hot_funds = [
+        {"code": "000001", "name": "华夏成长混合"},
+        {"code": "000002", "name": "华夏大盘精选混合"},
+        {"code": "000003", "name": "华夏现金增利货币"},
+        {"code": "000004", "name": "华夏回报混合A"},
+        {"code": "000005", "name": "华夏上证50ETF"},
+        {"code": "000006", "name": "华夏海外收益债券A"},
+        {"code": "000007", "name": "华夏全球股票(QDII)"},
+        {"code": "000008", "name": "华夏稳增混合"},
+        {"code": "000009", "name": "华夏兴华混合"},
+        {"code": "000010", "name": "华夏策略混合"},
+        {"code": "000011", "name": "华夏大盘精选混合C"},
+        {"code": "000012", "name": "华夏亚债中国指数C"},
+        {"code": "000013", "name": "华夏总回报债券A"},
+        {"code": "000014", "name": "华夏总回报债券C"},
+        {"code": "000015", "name": "华夏纯债债券A"},
+        {"code": "000016", "name": "华夏纯债债券C"},
+        {"code": "000017", "name": "华夏安康信用债债券A"},
+        {"code": "000018", "name": "华夏安康信用债债券C"},
+        {"code": "000019", "name": "华夏永福养老理财混合"},
+        {"code": "000020", "name": "华夏永福养老理财混合C"},
+        {"code": "000021", "name": "华夏优势增长混合"},
+        {"code": "000022", "name": "华夏领先股票"},
+        {"code": "000023", "name": "华夏安康信用债债券E"},
+        {"code": "000024", "name": "华夏新兴消费混合A"},
+        {"code": "000025", "name": "华夏新兴消费混合C"},
+        {"code": "000026", "name": "华夏稳盛灵活配置混合A"},
+        {"code": "000027", "name": "华夏稳盛灵活配置混合C"},
+        {"code": "000028", "name": "华夏新锦源混合A"},
+        {"code": "000029", "name": "华夏新锦源混合C"},
+        {"code": "000031", "name": "华夏复兴混合"},
+        {"code": "000032", "name": "华夏经典配置混合"},
+        {"code": "000033", "name": "华夏优势企业混合A"},
+        {"code": "000034", "name": "华夏优势企业混合C"},
+        {"code": "000035", "name": "华夏行业景气混合A"},
+        {"code": "000036", "name": "华夏行业景气混合C"},
+        {"code": "000037", "name": "华夏安康信用债债券F"},
+        {"code": "000038", "name": "华夏可转债债券A"},
+        {"code": "000039", "name": "华夏可转债债券C"},
+        {"code": "000040", "name": "华夏双债增强债券A"},
+        {"code": "000041", "name": "华夏双债增强债券C"},
+        {"code": "000042", "name": "华夏产业升级混合A"},
+        {"code": "000043", "name": "华夏产业升级混合C"},
+        {"code": "000044", "name": "华夏高端制造混合A"},
+        {"code": "000045", "name": "华夏高端制造混合C"},
+        {"code": "000046", "name": "华夏新起点混合A"},
+        {"code": "000047", "name": "华夏新起点混合C"},
+        {"code": "000048", "name": "华夏新趋势混合A"},
+        {"code": "000049", "name": "华夏新趋势混合C"},
+        {"code": "000050", "name": "华夏创新驱动混合A"},
+        {"code": "000051", "name": "华夏创新驱动混合C"},
+        {"code": "000052", "name": "华夏新锦程混合A"},
+        {"code": "000053", "name": "华夏新锦程混合C"},
+        {"code": "000054", "name": "华夏新活力混合A"},
+        {"code": "000055", "name": "华夏新活力混合C"},
+        {"code": "000056", "name": "华夏新经济混合A"},
+        {"code": "000057", "name": "华夏新经济混合C"},
+        {"code": "000058", "name": "华夏新机遇混合A"},
+        {"code": "000059", "name": "华夏新机遇混合C"},
+        {"code": "000060", "name": "华夏新供给混合A"},
+        {"code": "000061", "name": "华夏新供给混合C"},
+        {"code": "000062", "name": "华夏新蓝筹混合A"},
+        {"code": "000063", "name": "华夏新蓝筹混合C"},
+        {"code": "000064", "name": "华夏新城镇混合A"},
+        {"code": "000065", "name": "华夏新城镇混合C"},
+        {"code": "000066", "name": "华夏新财富混合A"},
+        {"code": "000067", "name": "华夏新财富混合C"},
+        {"code": "000068", "name": "华夏新动力混合A"},
+        {"code": "000069", "name": "华夏新动力混合C"},
+        {"code": "000070", "name": "华夏新回报混合A"},
+        {"code": "000071", "name": "华夏新回报混合C"},
+        {"code": "000072", "name": "华夏新收益混合A"},
+        {"code": "000073", "name": "华夏新收益混合C"},
+        {"code": "000074", "name": "华夏新趋势混合A"},
+        {"code": "000075", "name": "华夏新趋势混合C"},
+        {"code": "000076", "name": "华夏新机遇混合A"},
+        {"code": "000077", "name": "华夏新机遇混合C"},
+        {"code": "000078", "name": "华夏新供给混合A"},
+        {"code": "000079", "name": "华夏新供给混合C"},
+        {"code": "000080", "name": "华夏新蓝筹混合A"},
+        {"code": "000081", "name": "华夏新蓝筹混合C"},
+        {"code": "000082", "name": "华夏新城镇混合A"},
+        {"code": "000083", "name": "华夏新城镇混合C"},
+        {"code": "000084", "name": "华夏新财富混合A"},
+        {"code": "000085", "name": "华夏新财富混合C"},
+        {"code": "000086", "name": "华夏新动力混合A"},
+        {"code": "000087", "name": "华夏新动力混合C"},
+        {"code": "000088", "name": "华夏新回报混合A"},
+        {"code": "000089", "name": "华夏新回报混合C"},
+        {"code": "000090", "name": "华夏新收益混合A"},
+        {"code": "000091", "name": "华夏新收益混合C"},
+        {"code": "000092", "name": "华夏新趋势混合A"},
+        {"code": "000093", "name": "华夏新趋势混合C"},
+        {"code": "000094", "name": "华夏新机遇混合A"},
+        {"code": "000095", "name": "华夏新机遇混合C"},
+        {"code": "000096", "name": "华夏新供给混合A"},
+        {"code": "000097", "name": "华夏新供给混合C"},
+        {"code": "000098", "name": "华夏新蓝筹混合A"},
+        {"code": "000099", "name": "华夏新蓝筹混合C"}
+    ]
+    
+    # 获取每个基金的实时净值预估
+    result = []
+    for fund in hot_funds:
+        try:
+            estimate_data = get_fund_estimate(fund["code"])
+            result.append({
+                "code": fund["code"],
+                "name": fund["name"],
+                "estimate": estimate_data["estimate"],
+                "estimate_change": estimate_data["estimate_change"],
+                "time": estimate_data["time"],
+                "type": estimate_data["type"],
+                "sector": estimate_data["sector"]
+            })
+        except Exception as e:
+            print(f"获取基金{fund['code']}数据失败:", e)
+            # 如果获取失败，添加一个默认数据
+            result.append({
+                "code": fund["code"],
+                "name": fund["name"],
+                "estimate": "0.00",
+                "estimate_change": "0.00",
+                "time": "",
+                "type": "混合型",
+                "sector": "未分类"
+            })
+    
+    return result
+
 # API端点：导入基金数据
 @router.post("/funds/import")
 async def import_funds(file: UploadFile = File(...), current_user: UserInDB = Depends(get_current_user)):

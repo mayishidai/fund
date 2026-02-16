@@ -19,7 +19,7 @@ async def get_gold_history_data():
 
 # API端点：获取上海金分时数据
 @router.get("/gold/minute")
-async def get_gold_minute_data():
+async def get_gold_minute_data_endpoint():
     return {
         "code": "AU9999",
         "name": "上海金",
