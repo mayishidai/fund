@@ -1910,6 +1910,10 @@
         // 加载上海金分时图
         async function loadGoldMinuteChart() {
             try {
+                // 更新按钮状态
+                document.querySelector('button[onclick="loadGoldMinuteChart()"]').style.backgroundColor = '#3498db';
+                document.querySelector('button[onclick="loadGoldHistoryChart()"]').style.backgroundColor = '#95a5a6';
+                
                 const response = await fetch(`${API_BASE_URL}/gold/minute`);
                 if (!response.ok) {
                     throw new Error('获取上海金分时数据失败');
@@ -2064,6 +2068,10 @@
         // 加载上海金历史图表
         async function loadGoldHistoryChart() {
             try {
+                // 更新按钮状态
+                document.querySelector('button[onclick="loadGoldMinuteChart()"]').style.backgroundColor = '#95a5a6';
+                document.querySelector('button[onclick="loadGoldHistoryChart()"]').style.backgroundColor = '#3498db';
+                
                 const response = await fetch(`${API_BASE_URL}/gold/history`);
                 if (!response.ok) {
                     throw new Error('获取上海金历史数据失败');
